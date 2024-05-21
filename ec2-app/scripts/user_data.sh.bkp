@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Change memory_limit
+
+sudo sed -i 's/memory_limit = 512M/memory_limit = 736M/g' /etc/php/7.4/apache2/php.ini
+
+# ==================================== NFS ASYNC - SECTION ====================================
+
+OLD_API_KEY="87d763266c8afa2aaec84a667b4288dfFFFFNRAL"
+API_KEY="3845126cd2cc182bd77b9ffda7af4117FFFFNRAL"
+DEFAULT_APP_NAME="PHP Application"
+APP_NAME="WebNova-AWS"
+
+
+echo 'deb http://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
+wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq install newrelic-php5
+sudo NR_INSTALL_KEY=$API_KEY newrelic-install install
+
+
+#sudo sed -i "s/$OLD_API_KEY/$API_KEY/g" /etc/php/7.4/cli/conf.d/newrelic.ini
+#sudo sed -i "s/$OLD_API_KEY/$API_KEY/g" /etc/php/7.4/mods-available/newrelic.ini
+#sudo sed -i "s/$OLD_API_KEY/$API_KEY/g" /etc/php/7.4/apache2/conf.d/newrelic.ini
+
+sudo sed -i "s/$DEFAULT_APP_NAME/$APP_NAME/g" /etc/php/7.4/cli/conf.d/newrelic.ini
+sudo sed -i "s/$DEFAULT_APP_NAME/$APP_NAME/g" /etc/php/7.4/mods-available/newrelic.ini
+sudo sed -i "s/$DEFAULT_APP_NAME/$APP_NAME/g" /etc/php/7.4/apache2/conf.d/newrelic.ini
+
+echo "Apache2 config to block id_rsa file"
+sudo sed -i '44i\ \t<Directory \"/home/httpd/html/.ssh\">' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '45i\ \t\t<Files \"id_rsa\">' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '46i\ \t\t\tOrder allow,deny' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '47i\ \t\t\tDeny from all' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '48i\ \t\t</Files>' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '49i\ \t</Directory>' /etc/apache2/sites-enabled/000-default.conf
+
+
+sudo /etc/init.d/newrelic-daemon stop
+sudo systemctl restart apache2
+
+
+# ==================================== NFS ASYNC - SECTION ====================================
+
+echo "Unmounting all 1.37 shares"
+sudo umount -l /mnt/imagens/
+sudo umount -l /home/httpd/html/novagne/pdfdocs
+sudo umount -l /mnt/img_processo
+sudo umount -l /clientes2
+sudo umount -l /home/clientes
+
+echo "Remounting all 1.37 shares using async option"
+sudo mount -o rw,async -t nfs 192.168.1.37:/mnt/imagens /mnt/imagens/
+sudo mount -o rw,async -t nfs 192.168.1.37:/home/httpd/html/novagne/pdfdocs /home/httpd/html/novagne/pdfdocs
+sudo mount -o rw,async -t nfs 192.168.1.37:/mnt/imagens/img_processo /mnt/img_processo
+sudo mount -o rw,async -t nfs 192.168.1.37:/clientes2 /clientes2
+sudo mount -o rw,async -t nfs 192.168.1.37:/mnt/clientes /home/clientes
+
+echo "Setting auto accept hostkey"
+sudo ssh-keygen -f "/home/httpd/html/.ssh/known_hosts" -R "bitbucket.org"
+sudo chmod 600 /home/httpd/html/.ssh/known_hosts
+sudo chown www-data:www-data /home/httpd/html/.ssh/known_hosts
+sudo echo -e "Host bitbucket.org\n\tStrictHostKeyChecking no" > /home/httpd/html/.ssh/config
+
+echo "Apache2 config to block id_rsa file"
+sudo sed -i '44i\ \t<Directory \"/home/httpd/html/.ssh\">' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '45i\ \t\t<Files \"id_rsa\">' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '46i\ \t\t\tOrder allow,deny' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '47i\ \t\t\tDeny from all' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '48i\ \t\t</Files>' /etc/apache2/sites-enabled/000-default.conf
+sudo sed -i '49i\ \t</Directory>' /etc/apache2/sites-enabled/000-default.conf
