@@ -13,7 +13,7 @@ type Project struct {
 }
 
 type Aws struct {
-	Kmsid       string `json:"kmsid"`
+	Kms_arn     string `json:"kms_arn"`
 	Secret_name string `json:"secret_name"`
 	Region      string `json:"region"`
 }

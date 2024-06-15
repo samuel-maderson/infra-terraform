@@ -1,0 +1,3 @@
+aws kms encrypt --key-id mrk-bca14ff1d7d54570bb8ee392d1f56a76 --plaintext fileb://///home/samuel/.ssh/go-kms-sshkeys.pem --query CiphertextBlob --output text | base64 --decode > enckey2
+
+aws kms decrypt --key-id mrk-bca14ff1d7d54570bb8ee392d1f56a76 --ciphertext-blob fileb:////enckey2 --query Plaintext --output text |base64 -d
