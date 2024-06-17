@@ -1,18 +1,20 @@
-package main
+package kms
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	"io/ioutil"
-	"os"
 )
 
-func main(pemfile string, encryptfile string, kms_arn string) {
+func Encrypt(pemfile string, encryptfile string, kms_arn string, region string) {
 	// Define the KMS key ID
-	keyID := "arn:aws:kms:your-region:your-account-id:key/your-key-id"
+	keyID := kms_arn
 
 	// Read the file content
 	filePath := pemfile
@@ -23,7 +25,7 @@ func main(pemfile string, encryptfile string, kms_arn string) {
 	}
 
 	// Load the default configuration
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("your-region"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
 		fmt.Println("Error loading configuration:", err)
 		return
@@ -43,9 +45,16 @@ func main(pemfile string, encryptfile string, kms_arn string) {
 		return
 	}
 
+	b64data := base64.StdEncoding.EncodeToString(result.CiphertextBlob)
+
 	// Write the encrypted content to a new file
-	encryptedFilePath := encryptfile
-	err = ioutil.WriteFile(encryptedFilePath, result.CiphertextBlob, 0644)
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return
+	}
+	encryptedFilePath := fmt.Sprintf("%s/data/%s", dir, encryptfile)
+	err = ioutil.WriteFile(encryptedFilePath, []byte(b64data), 0644)
 	if err != nil {
 		fmt.Println("Error writing encrypted file:", err)
 		return
