@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"go-kms-sshkeys/src/kms"
@@ -9,6 +10,8 @@ import (
 	"os"
 
 	arg "github.com/alexflint/go-arg"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 )
 
 var (
@@ -16,6 +19,7 @@ var (
 	fileByte []byte
 	err      error
 	args     types.Args
+	cfg      aws.Config
 )
 
 func init() {
@@ -30,30 +34,26 @@ func init() {
 		log.Fatal(err)
 	}
 
-	arg.MustParse(&args)
-
-	if args.Import == "" {
-		log.Fatal("None arguments were given, use -h for options\nExample: ./main.go -h")
+	// Load the default configuration
+	cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithRegion(jsonFile.Aws.Region))
+	if err != nil {
+		fmt.Println("Error loading configuration:", err)
+		return
 	}
+
+	arg.MustParse(&args)
 }
 
 func main() {
 
-	log.Println("\033[1;32m[+]\033[0m jsonFile: ", jsonFile.Project.Name)
-	log.Println("\033[1;32m[+]\033[0m Author: ", jsonFile.Project.Author)
-	log.Println("\033[1;32m[+]\033[0m Description: ", jsonFile.Project.Description)
-	log.Println("\033[1;32m[+]\033[0m Version: ", jsonFile.Project.Version)
-	fmt.Println()
 	log.Println("\033[1;32m[+]\033[0m Starting...")
 	if args.Import == "true" {
 		log.Println("\033[1;32m[+]\033[0m Importing keys...")
-		kms.Encrypt(jsonFile.Project.Pem_file, jsonFile.Project.Encrypt_file, jsonFile.Aws.Kms_arn, jsonFile.Aws.Region)
+		kms.Encrypt(cfg, jsonFile.Project.Pem_file, jsonFile.Project.Encrypt_file, jsonFile.Aws.Kms_arn, jsonFile.Aws.Region)
+	} else if args.Export == "true" {
+		log.Println("\033[1;32m[+]\033[0m Exporting keys...")
+		kms.Decrypt(cfg, jsonFile.Project.Encrypt_file, jsonFile.Project.Decrypt_file, jsonFile.Aws.Region)
+	} else {
+		log.Fatal("None arguments were given, use -h for options\nExample: ./main.go -h")
 	}
-
-	// else if args.Export == "true" {
-	// 	log.Println("\033[1;32m[+]\033[0m Exporting keys...")
-	// 	kms.Decrypt(jsonFile.Project.Encrypt_file, jsonFile.Project.Decrypt_file, jsonFile.Aws.Kms_arn, jsonFile.Aws.Region)
-	// } else {
-	// 	log.Fatal("None arguments were given, use -h for options\nExample: ./main.go -h")
-	// }
 }

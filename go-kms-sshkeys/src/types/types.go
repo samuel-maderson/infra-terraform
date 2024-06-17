@@ -12,6 +12,7 @@ type Project struct {
 	Version      string `json:"version"`
 	Pem_file     string `json:"pem_file"`
 	Encrypt_file string `json:"encrypt_file"`
+	Decrypt_file string `json:"decrypt_file"`
 }
 
 type Aws struct {
