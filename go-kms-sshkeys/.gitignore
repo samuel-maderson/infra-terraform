@@ -11,6 +11,8 @@ dist/
 encfile
 enckey2
 key
+data/go-kms-sshkeys.pem.dec
+data/go-kms-sshkeys.pem.enc
 
 # config
 config.json
