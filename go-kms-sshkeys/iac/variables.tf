@@ -17,6 +17,7 @@ variable "tags" {
   type = object({
     Name = string
     Workload = string
+    Environment = string
     Owner = string
     ProvisionedBy = string
     CreatedAt = string
