@@ -60,3 +60,13 @@ resource "aws_lambda_permission" "apigw_lambda_get" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.my_api.execution_arn}/*/*"
 }
+
+resource "aws_api_gateway_deployment" "apigw_deployment" {
+  depends_on = [
+    aws_api_gateway_integration.lambda_integration_get,
+    aws_api_gateway_integration.lambda_integration_post
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.my_api.id
+  stage_name  = "prod"
+}
