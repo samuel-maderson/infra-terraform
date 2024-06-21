@@ -16,3 +16,16 @@ variable "lambda" {
     name = string 
   })
 }
+
+variable "tags" {
+    description = "default tags"
+    type = object({
+      Name = string
+      Environment = string
+      Workload = string
+      Owner = string
+      ProvisionedBy = string
+      UpdatedAt = string
+      CreatedAt = string 
+    })
+}
